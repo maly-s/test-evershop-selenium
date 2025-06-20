@@ -6,7 +6,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
-from webdriver_manager.chrome import ChromeDriverManager
 import time
 
 class TestProductCreation:
@@ -17,10 +16,10 @@ class TestProductCreation:
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--remote-debugging-port=9222")
         
-        # Utiliser webdriver-manager pour gérer ChromeDriver
-        service = Service(ChromeDriverManager().install())
-        driver = webdriver.Chrome(service=service, options=chrome_options)
+        # Utiliser le gestionnaire de pilotes intégré de Selenium
+        driver = webdriver.Chrome(options=chrome_options)
         driver.implicitly_wait(10)
         yield driver
         try:

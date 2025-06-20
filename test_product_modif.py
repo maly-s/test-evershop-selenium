@@ -5,11 +5,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from webdriver_manager.chrome import ChromeDriverManager
-import time
 
-class TestProductCreation:
+class TestProductModification:
     @pytest.fixture
     def driver(self):
         chrome_options = Options()
@@ -17,16 +15,11 @@ class TestProductCreation:
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
-        
-        # Utiliser webdriver-manager pour gérer ChromeDriver
         service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=chrome_options)
         driver.implicitly_wait(10)
         yield driver
-        try:
-            driver.quit()
-        except:
-            pass
+        driver.quit()
 
     def find_input(self, driver, ids_or_names, timeout=10):
         for by, value in ids_or_names:
@@ -60,34 +53,40 @@ class TestProductCreation:
             lambda driver: "/login" not in driver.current_url
         )
 
-    def test_create_product(self, driver):
+    def test_modify_product(self, driver):
         self.admin_login(driver)
         driver.get("http://localhost:3000/admin/products")
-        new_product_button = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//a[contains(., 'New Product')]"))
+        
+        # Trouver et cliquer sur le produit à modifier
+        product_link = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//a[contains(., 'Sabre laser')]"))
         )
-        new_product_button.click()
+        product_link.click()
+
+        # Modifier les champs du produit
         fields = {
-            "name": "Sabre laser",
-            "sku": "1",
-            "price": "100",
-            "weight": "2",
-            "qty": "12",
-            "urlKey": "az12"
+            "name": "Sabre laser modifié",
+            "sku": "2",
+            "price": "200",
+            "weight": "3",
+            "qty": "15",
+            "urlKey": "az13"
         }
+
         for field_id, value in fields.items():
             input_field = WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.ID, field_id))
             )
             input_field.clear()
             input_field.send_keys(value)
+
+        # Sauvegarder les modifications
         save_button = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'primary')]"))
         )
         save_button.click()
+
+        # Vérifier la redirection
         WebDriverWait(driver, 10).until(
             lambda driver: "/admin/products" in driver.current_url
-        )
-
-    
-    
+        ) 

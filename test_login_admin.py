@@ -25,7 +25,7 @@ class TestAdminLogin:
     def test_successful_login(self, driver):
         try:
             # Navigate to login page
-            driver.get("http://10.21.6.26:3000/admin/login")
+            driver.get("http://localhost:3000/admin/login")
             print("\n=== Début du test de connexion ===")
             
             # Attendre que la page soit chargée
@@ -37,14 +37,14 @@ class TestAdminLogin:
             # Find and fill email field
             email_input = driver.find_element(By.NAME, "email")
             email_input.clear()
-            email_input.send_keys("admin@mail.com")
-            print("✓ Email saisi: admin@admin.com")
+            email_input.send_keys("malyy@mail.com")
+            print("✓ Email saisi: malyy@mail.com")
             
             # Find and fill password field
             password_input = driver.find_element(By.NAME, "password")
             password_input.clear()
-            password_input.send_keys("admin123")
-            print("✓ Mot de passe saisi: admin123")
+            password_input.send_keys("azertyuiopq1")
+            print("✓ Mot de passe saisi: azertyuiopq1")
             
             # Vérifier que les champs sont bien remplis
             print(f"Valeur du champ email: {email_input.get_attribute('value')}")
@@ -56,38 +56,23 @@ class TestAdminLogin:
             submit_button.click()
             print("✓ Bouton de connexion cliqué")
             
-            # Attendre un peu plus longtemps pour la redirection
-            time.sleep(5)
+            # Attendre un peu pour voir la réponse
+            time.sleep(2)
             
-            # Vérifier s'il y a des messages d'erreur
+            # Afficher l'URL actuelle et le contenu de la page
+            print(f"URL actuelle: {driver.current_url}")
+            print("Contenu de la page:")
+            print(driver.page_source)
+            
+            # Vérifier la présence du titre 'Dashboard'
             try:
-                error_messages = driver.find_elements(By.CSS_SELECTOR, "span.text-critical")
-                if error_messages:
-                    print(f"❌ Messages d'erreur trouvés: {[msg.text for msg in error_messages]}")
-            except:
-                print("✓ Aucun message d'erreur trouvé")
-            
-            # Vérifier l'URL actuelle
-            current_url = driver.current_url
-            print(f"URL actuelle: {current_url}")
-            
-            # Vérifier si nous sommes toujours sur la page de login
-            if "login" in current_url.lower():
-                # Vérifier si le formulaire est toujours présent
-                try:
-                    email_field = driver.find_element(By.NAME, "email")
-                    print("❌ Formulaire de login toujours présent")
-                except:
-                    print("✓ Formulaire de login non trouvé")
-                
-                # Vérifier le contenu de la page
-                page_source = driver.page_source
-                if "Invalid email" in page_source:
-                    print("❌ Message d'erreur 'Invalid email' trouvé dans la page")
-                if "Invalid password" in page_source:
-                    print("❌ Message d'erreur 'Invalid password' trouvé dans la page")
-                
-                pytest.fail(f"Still on login page. Current URL: {current_url}")
+                dashboard_title = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, "h1.page-heading-title"))
+                )
+                assert "Dashboard" in dashboard_title.text, "Le titre 'Dashboard' n'est pas présent"
+                print("✓ Titre 'Dashboard' trouvé")
+            except Exception as e:
+                pytest.fail(f"Erreur lors de la vérification du titre 'Dashboard': {str(e)}")
             
             print("=== Fin du test de connexion ===\n")
             
@@ -99,7 +84,7 @@ class TestAdminLogin:
     def test_invalid_email(self, driver):
         try:
             # Navigate to login page
-            driver.get("http://10.21.6.26:3000/admin/login")
+            driver.get("http://localhost:3000/admin/login")
             
             # Attendre que la page soit chargée
             WebDriverWait(driver, 10).until(
@@ -114,7 +99,7 @@ class TestAdminLogin:
             # Find and fill password field
             password_input = driver.find_element(By.NAME, "password")
             password_input.clear()
-            password_input.send_keys("admin123")
+            password_input.send_keys("azertyuiopq1")
             
             # Click submit button
             submit_button = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")

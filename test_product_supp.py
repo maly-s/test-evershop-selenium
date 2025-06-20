@@ -5,11 +5,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 
-class TestProductCreation:
+class TestProductDeletion:
     @pytest.fixture
     def driver(self):
         chrome_options = Options()
@@ -17,16 +16,11 @@ class TestProductCreation:
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
-        
-        # Utiliser webdriver-manager pour gérer ChromeDriver
         service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=chrome_options)
         driver.implicitly_wait(10)
         yield driver
-        try:
-            driver.quit()
-        except:
-            pass
+        driver.quit()
 
     def find_input(self, driver, ids_or_names, timeout=10):
         for by, value in ids_or_names:
@@ -60,34 +54,35 @@ class TestProductCreation:
             lambda driver: "/login" not in driver.current_url
         )
 
-    def test_create_product(self, driver):
+    def test_delete_product(self, driver):
         self.admin_login(driver)
         driver.get("http://localhost:3000/admin/products")
-        new_product_button = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//a[contains(., 'New Product')]"))
+        
+        # Trouver le produit à supprimer
+        product_row = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//tr[contains(., 'Sabre laser modifié')]"))
         )
-        new_product_button.click()
-        fields = {
-            "name": "Sabre laser",
-            "sku": "1",
-            "price": "100",
-            "weight": "2",
-            "qty": "12",
-            "urlKey": "az12"
-        }
-        for field_id, value in fields.items():
-            input_field = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.ID, field_id))
-            )
-            input_field.clear()
-            input_field.send_keys(value)
-        save_button = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'primary')]"))
+        
+        # Cliquer sur l'input checkbox en utilisant JavaScript
+        select_checkbox = product_row.find_element(By.XPATH, ".//input[@type='checkbox']")
+        driver.execute_script("arguments[0].click();", select_checkbox)
+        
+        # Attendre un peu pour que l'interface se mette à jour
+        time.sleep(1)
+        
+        # Trouver et cliquer sur le lien de suppression
+        delete_link = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//a[contains(@class, 'font-semibold') and contains(., 'Delete')]"))
         )
-        save_button.click()
+        delete_link.click()
+        
+        # Confirmer la suppression dans la boîte de dialogue en utilisant JavaScript
+        confirm_button = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//button[contains(., 'Delete') or contains(., 'Supprimer')]"))
+        )
+        driver.execute_script("arguments[0].click();", confirm_button)
+        
+        # Vérifier que le produit n'est plus présent
         WebDriverWait(driver, 10).until(
-            lambda driver: "/admin/products" in driver.current_url
-        )
-
-    
-    
+            EC.invisibility_of_element_located((By.XPATH, "//tr[contains(., 'Sabre laser modifié')]"))
+        ) 
